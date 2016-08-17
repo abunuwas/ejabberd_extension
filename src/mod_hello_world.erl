@@ -19,7 +19,9 @@
 	packeto/4,
 	packeto/5,
 	process/2,
-	disconnection/1
+	disconnection/1,
+    filter2_packet/1,
+    filter3_packet/1
 	]).
 
 -ifndef(LAGER).
@@ -27,6 +29,8 @@
 -endif.
 
 start(_Host, _Opt) -> 
+    ejabberd_hooks:add(c2s_filter_packet, _Host, ?MODULE, filter2_packet, 50),
+    ejabberd_hooks:add(filter_packet, global, ?MODULE, filter3_packet, 50),
     ?INFO_MSG("BUENO: Hello, ejabberd world!", []),
     ?INFO_MSG("BUENO: Before adding hook...", []),
     ejabberd_hooks:add(user_send_packet, _Host, ?MODULE, packeto, 50),
@@ -44,7 +48,8 @@ stop(_Host) ->
     ejabberd_hooks:delete(component_connected, _Host, ?MODULE, disconnection, 50),
     ok. 
 
-packeto(Packet, _state, Jid_from, Jid_to) ->
+packeto(Packet, State, Jid_from, Jid_to) ->
+    %?INFO_MSG("P A C K E T O : ", [binary_to_list(State)]),
 	{_, Username, _, _, _, _, _} = Jid_from,
 	{_, Subdomain, _, _, _, _, _} = Jid_to,
 	{_, Stanza, _, _} = Packet,
@@ -56,7 +61,8 @@ packeto(Packet, _state, Jid_from, Jid_to) ->
     																					),
     Packet.
 
-packeto(Packet, _state, Jid_from, Jid_to, _jid_from2) ->
+packeto(Packet, State, Jid_from, Jid_to, _jid_from2) ->
+    %?INFO_MSG("P A C K E T O : ", [binary_to_list(State)]),
 	{_, Username, _, _, _, _, _} = Jid_from,
 	{_, _, Subdomain, _, _, _, _} = Jid_to,
 	{_, Stanza, _, _} = Packet,
@@ -83,4 +89,17 @@ disconnection(Something) ->
 																					      ]
 																					      ),
     Something.
+
+filter2_packet({Acc, Server, C2SState, Feature, To, Packet}) ->
+    ?INFO_MSG("JAJAJAJAJAJJAJAJAJJAJAJAJAJJAJAJA ~p~n", [binary_to_list(Acc)]),
+    ?INFO_MSG("JAJAJAJAJAJJAJAJAJJAJAJAJAJJAJAJA ~p~n", [binary_to_list(Server)]),
+    ?INFO_MSG("JAJAJAJAJAJJAJAJAJJAJAJAJAJJAJAJA ~p~n", [binary_to_list(C2SState)]),
+    ?INFO_MSG("JAJAJAJAJAJJAJAJAJJAJAJAJAJJAJAJA ~p~n", [binary_to_list(Feature)]),
+    ?INFO_MSG("JAJAJAJAJAJJAJAJAJJAJAJAJAJJAJAJA ~p~n", [binary_to_list(To)]),
+    ok = ?INFO_MSG("JAJAJAJAJAJJAJAJAJJAJAJAJAJJAJAJA ~p~n", [binary_to_list(Packet)]),
+    Packet.
+
+filter3_packet({_From, _To, XML} = Packet) ->
+    ?INFO_MSG("JAJAJAJAJAJJAJAJAJJAJAJAJAJJAJAJA ~p~n", [XML]),
+    Packet.
     
